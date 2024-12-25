@@ -1,0 +1,231 @@
+---------------------------------------------------------
+JENKIN INSTALLATION 
+---------------------------------------------------------
+
+Installing ubuntu 20 on EC2 instance 
+
+Go to AWS console [Launch Instance]
+	Name: Jenkins-Server
+	OS Image: Ubuntu > Ubuntu server 20.04 LTS
+	Instance type: t2.micro (t2.small is recommended)
+	Create New key pair: 
+		Name: Jenkinu20, choose: RSA, .pem
+	Network setting: [Edit]
+		Security GroupName: Jenkin-SG
+		Inbound security group rule > Security group rule 1 
+			type: SSH 	Protocol:TCP 	port range: 22
+			source type: MyIp
+		Security group rule 2 
+			type: Custome TCP	Protocol: TCP	port range: 8080
+			source type: Anywhere
+	Configer storage: select gp3 
+
+[Click Launch Instance]
+
+Go to Git bash and login to jenkins server
+$ ssh -i /d/SecurityKey/Jenkinu20 ubuntu@<publicIp of jenkins server from EC2 instance>
+		
+		Note: /d/SecurityKey/Jenkinu20 {Is the path where you save the .pem key}
+
+	
+sudo -i 
+sudo apt-get update
+
+Installing Java 
+
+sudo apt install fontconfig openjdk-17-jre
+sudo apt install openjdk-11-jdk -y
+sudo apt install openjdk-8-jdk -y 
+
+-----------------------------------------------------------------
+ of Jenkins from jenkins.io documentation 
+-----------------------------------------------------------------
+1st
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+ 
+2nd 
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+ https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+3rd
+sudo apt-get update
+
+4th
+sudo apt-get install jenkins
+
+-----------------------------------------------------------------
+Openweb browser and type 
+	publick IP of jenkins from AWS instance:8080
+
+eg 54.44.31.1227:8080
+
+Get started page will be opened 
+/var/lib/jenkins/secrets/instalAdminPassword
+
+go to git bash
+$cat /var/lib/jenkins/secrets/instalAdminPassword
+<it will retrun something here> eg.1c82dbd7b4d841a78ded4ac51dc67175
+ 
+Admin password [Paste what ever is returned to the page ]
+
+Customize jenkins: 
+	Select plugins to install 
+go to build tools 
+uncheck Ant
+and check Node js
+
+username: admin
+password: admin 
+full name: admin 
+email: admin@admin.com
+Instance configuration jenkin url .. save and finish
+
+Jenkins is ready 
+
+On jenkins page, Manage Jenkins > Tools 
+	JDK installation > Add JDK
+
+go to git bash and install JDK 11 if it is not installed 
+
+$ sudo apt install openjdk-11-jdk  -y 
+$ ls /usr/lib/jvm/java-1.11.0-openjdk-amd64
+
+now go back to jenkins page 
+Manage Jenkins > Tools 
+JDK installation > Add JDK
+	Name: OracleJDK11
+	Java_HOME: /usr/lib/jvm/java-1.11.0-openjdk-amd64
+
+[ADD jdk]
+	Name: OracleJDK8
+	Java_HOME: /usr/lib/jvm/java-1.8.0-openjdk-amd64
+
+MAVEN CONFIGURATION 
+[Add Maven]
+Name: MAVEN3
+Version: 3.9.6
+
+[Save]
+
+Now Let's create a Job 
+Go to dashboard > Create a job 
+Name: myCommand
+(x)Freesyle project
+[Ok]
+
+General Description "Running some commands to test Jenkis job 
+Scroll down a bit "Build steps" select Execute_Shell"
+type 
+id
+whoami
+pwd 
+[Save]
+Click > Build Now 
+So you see console output, you can also see "My command in the dashboard" 
+Now click configure, click [Add build steps] Execute shell
+Under command tupe give a wrong command to check eg ABCD 
+click Build now and check the console output 
+
+Now you can go to git bash 
+sudo -i 
+ls /var/lib/jenkins/Workspace 
+Mycommand 
+
+now if you click build now it will give you another error 
+Go to configure remove ABCD and add below code instade 
+
+echo "........................."
+echo "This is a test Job ">>myfile.txt
+ls -l 
+echo "Print my files" 
+echo ".........................."
+cat myfile.txt 
+[save]
+build now 
+go to dashboard > mycommand > workspace
+workspace of mycommand on build -in node 
+my command 
+myfile.txt all files created in zip 
+
+dashboard > myCommand
+and click the icon leggend to see what the icon legends represent 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

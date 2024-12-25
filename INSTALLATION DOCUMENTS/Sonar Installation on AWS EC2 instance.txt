@@ -1,0 +1,181 @@
+
+In nexusServer 
+Security group 
+add description port : 8081 "Allow traffic from jenkins 
+check satya Notes 02/29/2024 for the modeification of the security group
+Nexsus server done on 02/29/2024
+
+---------------------------------------------------------
+setup our sonarqube server. 
+---------------------------------------------------------
+SonarqubeServer 
+Ubuntu 20 
+instacnce type t2.medium
+
+create new pair Sonarkey, RSA .pem 
+
+Network setting [Edit] 
+Security group, Sonar-SG
+Security group 1, this is for ssh to connect from CLI
+ ssh
+ myip 
+security group 2, this is for the front end 
+custom TCP ... Port Range 80
+Anywhiere 
+
+security group 3, this is allowing jenkin traffic to sonar 
+custom      jenkin-SG      Description: allow jenkins to connect to sonar
+
+
+configure storage 
+gp3
+
+
+
+https://github.com/onjerryaws/vprofile-project/tree/ci-jenkins/userdata
+
+sonar-setup.sh 
+
+or directrly use 
+https://github.com/onjerryaws/vprofile-project/blob/ci-jenkins/userdata/sonar-setup.sh
+
+copy row 
+
+Advance  details , scroll to the bottom and 
+put the sonnar code 
+
+This code is pre-made to install and configure sonarQube server
+
+
+Launch instance. 
+-------------------------------------------------------
+Now launch JenkinsServer, NexsusServer, SonarqubeServer
+-------------------------------------------------------
+
+login to nexusServer 
+	ssh -i /d/.......centos@<Nexus Public IP> 
+sudo -i 
+systemctl status nexus (Check nexsus is running) 
+
+browser nexsusIP:8080
+while login to  nexusServer you may not see the whole page 
+especially if you login to a corporate network may be of a firewall 
+restriction
+
+now sign in 
+read the instruction 
+cat opt/nexus/sonatype-work/nexus3/admin.password
+copy the password 
+admin 
+	<coppied password> 
+	sign in 
+new password: admin 
+	enable anaonymous access, next, finish 
+Set up is done 
+
+
+----------------------------------------------
+go to sonarqubeServer copy public Ip 
+simply paste it on the browser 
+login on SonarQube 
+Default is admin admin, in the script
+	USN: admin 
+	PWD: admin 
+
+if you don't see the page 
+go to git bash and check 
+	systemctl status sonarqube
+
+-------Setup is completed for sonar -------------
+
+
+Plugins needed 
+Nexus Artifact Uploader 
+SonarQube Scanner 
+Git 
+Pipline maven integration 
+Build timestamp  (For versioning the artifacts) 
+
+Now go to our instance to Jenkins 
+copy <publicIP>:8080 
+login 
+admin 
+admin 
+
+Dashboard>Manage jenkin> update the url 
+Goto workspace and wipe all out if storage is run out 
+
+go to workspace Build and wipe out 
+go to workspace Build-test wipe out 
+go to workspace provisioning wipe out 
+
+Now Dashbord > manage jenkis > plugins > Available plugins 
+search nexus Artifacts, SonarQube Scanner,  Pipline maven integration 
+Build timestamp pipleline utility step, Dark them 
+click [install] 
+check git plugin is installed 
+
+
+to restart your jenkin server you can also do 
+<publicIP>:8080/restart
+
+check diskspace 
+Dashboard ?manage Jenkins > Nodes 
+
+------------------------------------
+Now onwards we are starting CICD
+------------------------------------
+pipe line as a code 
+Jenkinfile
+
+write the pipeline 
+-----------------
+
+go to jenkinsServer
+create a job 
+	Name: sample-paac
+	Definition: Pipeline script 
+Copy the following code and pate it on	
+	pipeline => Definition > Pipeline script > Script
+	
+pipeline {
+	agent any
+	tools {
+	    maven "MAVEN3"
+	    jdk "OracleJDK8"
+	}
+
+	stages {
+	    stage('Fetch code') {
+            steps {
+               git branch: 'main', url: 'https://github.com/onjerryaws/vprofile-project2.git'
+            }
+
+	    }
+
+	    stage('Build'){
+	        steps{
+	           sh 'mvn install -DskipTests'
+	        }
+
+	        post {
+	           success {
+	              echo 'Now Archiving it...'
+	              archiveArtifacts artifacts: '**/target/*.war'
+	           }
+	        }
+	    }
+
+	    stage('UNIT TEST') {
+            steps{
+                sh 'mvn test'
+            }
+        }
+	}
+}
+
+[Save] The code 
+
+click [Build Now]
+and see sample-paac output 
+
